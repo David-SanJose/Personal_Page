@@ -1,308 +1,330 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link href="../../index.css" rel="stylesheet">
-    <link href="../../machines.css" rel="stylesheet">
-  </head>
-  <body>
-    <div class="container text-center">
-        <div class="row justify-content-center">
-          <div class="col-8">
-            <h1>Symphonos2: Walkthrough</h1>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="../../index.css" rel="stylesheet">
+  <link href="../../machines.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container text-center">
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <h1>Symphonos2: Walkthrough</h1>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <h2>Summary</h2>
+        <p>Symphonos2 is a Medium challenge rated machine were attackers apply techniques as ...</p>
+        <button class="btn btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
+          aria-expanded="false" aria-controls="collapseExample">
+          SPOILER
+        </button>
+        </p>
+        <div class="collapse" id="collapseExample">
+          <div class="card card-body">
+            <ul class="list-group">
+              <li class="list-group-item">FTP and SMB enumeration</li>
+              <li class="list-group-item">ProFTPD 1.3.5 cpfr/cpto functions explotation (CVE-2015-3306)</li>
+              <li class="list-group-item">Port-forwarding to expose internal ports</li>
+              <li class="list-group-item">LibreNMS privelege escalation</li>
+              <li class="list-group-item">SUID privilege escalation (root)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <p>Vulnhub link:
+          <a href="https://www.vulnhub.com/entry/symfonos-2,331/">https://www.vulnhub.com/entry/symfonos-2,331/</a>
+        </p>
+      </div>
+    </div>
+
+
+    <hr class="hr" />
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <h2>Network config</h2>
+        <p>Both machines are deployed in VirtualBox, being connected by a 'Host-only' network configuration.</p>
+        <table class="table">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">Machine</th>
+              <th scope="col">IP</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">kali</th>
+              <td>192.168.56.101/24</td>
+              <td>The attacker machine</td>
+            </tr>
+            <tr>
+              <th scope="row">symphonos2</th>
+              <td>192.168.56.102/24</td>
+              <td>Target machine to be pwned</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <h2>Let's hack!</h2>
+        <h3>Enumeration</h3>
+        <p>Enumerating the system is the core of a penetration test, in this case,
+          it's gonna help us to identify technologies within the server,
+          and locate possible entry points to exploit.</p>
+        <p>We can start by scaning all machine's ports with nmap, finding the following open ports: 21,22,80,139,445</p>
+        <img class="img-fluid img-evidences" src="imgs/001_nmapfullscan.png" alt="">
+
+        <p>Next step is to gather some port versions.</p>
+        <img class="img-fluid img-evidences" src="imgs/002_nmapportsversions.png" alt="">
+
+        <p>There is an smb port, with anonymous access. A good aproach is to use smbmap,
+          to gather more information about the workspaces, finding an anonymous workspace with read access.</p>
+        <img class="img-fluid img-evidences" src="imgs/003_smbmap.png" alt="">
+
+        <p>Inside of the workspace there is a log file with information of interest,
+          as a path to shadow's file backup, samba's configuration and the path to the current anonymous share, located
+          under the aeolus user.</p>
+        <img class="img-fluid img-evidences" src="imgs/004_smb_anonworkspace.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/005_getlogfile.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/006_logfile1.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/007_logfile2.png" alt="">
+
+        <p>As a summary of information gathered in each service:</p>
+        <div class="d-flex align-items-start">
+          <div style="min-width: 20vw;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist"
+            aria-orientation="vertical">
+            <button class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home"
+              type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">ProFTPD 1.3.5</button>
+            <button class="nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile"
+              type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">OpenSSH 7.4p1</button>
+            <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-messages"
+              type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">WebFS httpd 1.21</button>
+            <button class="nav-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings"
+              type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Samba smbd
+              4.5.16-Debian</button>
+          </div>
+          <div class="tab-content" id="v-pills-tabContent">
+            <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab"
+              tabindex="0">
+              <ol class="list-group list-group-numbered">
+                <li class="list-group-item">Not the latest version (1.3.9)</li>
+                <li class="list-group-item">There is an exploit for this version, that allows the use of 'cpfr' and
+                  'cpto' commands, being able to copy files (CVE-2015-3306). Often used to gain RCE via Webshell.</li>
+                <li class="list-group-item">Anonymous login with email</li>
+              </ol>
+            </div>
+            <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab"
+              tabindex="0">Can be useful if credentials are found (Brute-force)</div>
+            <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab"
+              tabindex="0">A simple HTTP web server, only used for static content. Can be useful if we manage to upload
+              files via FTP.</div>
+            <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab"
+              tabindex="0">
+              <ol class="list-group list-group-numbered">
+                <li class="list-group-item">Anonymous access to 'anonymous' share (read-only)</li>
+                <li class="list-group-item">Log file with path locations</li>
+                <li class="list-group-item">Path to this share '/home/aeolus/share'</li>
+              </ol>
+            </div>
           </div>
         </div>
 
-        <div class="row justify-content-center">
-            <div class="col-8">
-              <h2>Summary</h2>
-              <p>Symphonos2 is a Medium challenge rated machine were attackers apply techniques as ...</p>
-              <button class="btn btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                SPOILER
-              </button>
-            </p>
-            <div class="collapse" id="collapseExample">
-                  <div class="card card-body">
-                    <ul class="list-group">
-                      <li class="list-group-item">FTP and SMB enumeration</li>
-                      <li class="list-group-item">ProFTPD 1.3.5 cpfr/cpto functions explotation  (CVE-2015-3306)</li>
-                      <li class="list-group-item">Port-forwarding to expose internal ports</li>
-                      <li class="list-group-item">LibreNMS privelege escalation</li>
-                      <li class="list-group-item">SUID privilege escalation (root)</li>
-                    </ul>
-                  </div>
-                </div>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-              <div class="col-8">
-                <p>Vulnhub link: 
-                  <a href="https://www.vulnhub.com/entry/symfonos-2,331/">https://www.vulnhub.com/entry/symfonos-2,331/</a>
-                </p>
-              </div>
-            </div>
-            
-        
-        <hr class="hr" />
-        <div class="row justify-content-center">
-          <div class="col-8">
-            <h2>Network config</h2>
-            <p>Both machines are deployed in VirtualBox, being connected by a 'Host-only' network configuration.</p>
-            <table class="table">
-              <thead class="thead-dark">
-                <tr>
-                  <th scope="col">Machine</th>
-                  <th scope="col">IP</th>
-                  <th scope="col">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">kali</th>
-                  <td>192.168.56.101/24</td>
-                  <td>The attacker machine</td>
-                </tr>
-                <tr>
-                  <th scope="row">symphonos2</th>
-                  <td>192.168.56.102/24</td>
-                  <td>Target machine to be pwned</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-      </div>
+        <h3>Explotation</h3>
 
-      <div class="row justify-content-center">
-        <div class="col-8">
-            <h2>Let's hack!</h2>
-            <h3>Enumeration</h3>
-            <p>Enumerating the system is the core of a penetration test, in this case,
-               it's gonna help us to identify technologies within the server, 
-               and locate possible entry points to exploit.</p>
-            <p>We can start by scaning all machine's ports with nmap, finding the following open ports: 21,22,80,139,445</p>
-            <img class="img-fluid img-evidences" src="imgs/001_nmapfullscan.png" alt="">
+        <h4>Trying to gain an RCE via ftp-exploit</h4>
+        <p>Knowing that ftp is vulnerable to CVE-2015-3306, a good approach is trying to gain RCE via a Webshell,
+          uploading a php payload.</p>
+        <p>We will review the next exploit: <a
+            href="https://github.com/t0kx/exploit-CVE-2015-3306">https://github.com/t0kx/exploit-CVE-2015-3306</a></p>
+        <p>The exploit connects to the machine via fpt, as an anonymous user.
+          Next, it uses the fuctions 'site cpfr' y 'site cpto' to copy a php payload to web server's path.
+        </p>
+        <img class="img-fluid img-evidences" src="imgs/008_exploit_py.png" alt="">
+        <p>
+          To replicate this, we try to use those commands to create a php file.
+        </p>
+        <img class="img-fluid img-evidences" src="imgs/009_copyfr_test.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/010_copytp_test.png" alt="">
+        <p>As it is shown, it is successful. The problem comes when you try to copy a file to '/var/www/html',
+          because the user doesn't have enough privileges to do so.
+          This ruins the possibility of gaining an RCE, but still we can move files around within the system,
+          allowing us to try different approaches</p>
 
-            <p>Next step is to gather some port versions.</p>
-            <img class="img-fluid img-evidences" src="imgs/002_nmapportsversions.png" alt="">
+        <h4>Retrieving sensitive files (shadow and passwd)</h4>
+        <p>SMB server allows us to get all files form anonymous workspace,
+          and FTP server allows us to copy files to another directories. As we know the location of the anon workspace,
+          could be wise to check if it's posible to copy sensible files to this location, downloading them afterwards.
+        </p>
+        <p>Great targets are:</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">File</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">'/var/backups/shadow.bak'</th>
+              <td>Contains password hashes</td>
+            </tr>
+            <tr>
+              <th scope="row">'/etc/passwd'</th>
+              <td>Contains users and more info about them.</td>
+            </tr>
+            <tr>
+              <th scope="row">'/usr/local/etc/etc/proftpd.conf'</th>
+              <td>FTP server's configuration file.</td>
+            </tr>
+            <tr>
+              <th scope="row">'/etc/samba/smb.conf'</th>
+              <td>SMB configuration file</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Example of '/etc/passwd' file retrieval:</p>
+        <img class="img-fluid img-evidences" src="imgs/011_copying sensitive files.png" alt="">
 
-            <p>There is an smb port, with anonymous access. A good aproach is to use smbmap, 
-              to gather more information about the workspaces, finding an anonymous workspace with read access.</p>
-            <img class="img-fluid img-evidences" src="imgs/003_smbmap.png" alt="">
+        <p>We download the rest of the files</p>
+        <img class="img-fluid img-evidences" src="imgs/012_get_sensitive_files.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/013_get_sensitive_files2.png" alt="">
 
-            <p>Inside of the workspace there is a log file with information of interest, 
-              as a path to shadow's file backup, samba's configuration and the path to the current anonymous share, located under the aeolus user.</p>
-            <img class="img-fluid img-evidences" src="imgs/004_smb_anonworkspace.png" alt="">
-            <img class="img-fluid img-evidences" src="imgs/005_getlogfile.png" alt="">
-            <img class="img-fluid img-evidences" src="imgs/006_logfile1.png" alt="">
-            <img class="img-fluid img-evidences" src="imgs/007_logfile2.png" alt="">
-            
-            <p>As a summary of information gathered in each service:</p>
-            <div class="d-flex align-items-start">
-              <div style="min-width: 20vw;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                <button class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">ProFTPD 1.3.5</button>
-                <button class="nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">OpenSSH 7.4p1</button>
-                <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-messages" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">WebFS httpd 1.21</button>
-                <button class="nav-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Samba smbd 4.5.16-Debian</button>
-              </div>
-              <div class="tab-content" id="v-pills-tabContent">
-                <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
-                  <ol class="list-group list-group-numbered">
-                    <li class="list-group-item">Not the latest version (1.3.9)</li>
-                    <li class="list-group-item">There is an exploit for this version, that allows the use of 'cpfr' and 'cpto' commands, being able to copy files (CVE-2015-3306). Often used to gain RCE via Webshell.</li>
-                    <li class="list-group-item">Anonymous login with email</li>
-                  </ol>
-                </div>
-                <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">Can be useful if credentials are found (Brute-force)</div>
-                <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab" tabindex="0">A simple HTTP web server, only used for static content. Can be useful if we manage to upload files via FTP.</div>
-                <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab" tabindex="0">
-                  <ol class="list-group list-group-numbered">
-                    <li class="list-group-item">Anonymous access to 'anonymous' share (read-only)</li>
-                    <li class="list-group-item">Log file with path locations</li>
-                    <li class="list-group-item">Path to this share '/home/aeolus/share'</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
+        <p>Inside of 'passwd', multiple users are found (root, aeolus and cronus)</p>
+        <img class="img-fluid img-evidences" src="imgs/017_users.png" alt="">
 
-            <h3>Explotation</h3>
+        <p>Having the users and their password hashes, it's possible to try cracking their passwords.
+          For that, we can use 'john' (a tool to find weak passwords of users).
+          It requieres a file that we can build with 'unshadow'</p>
+        <img class="img-fluid img-evidences" src="imgs/014_unshadow.png" alt="">
 
-            <h4>Trying to gain an RCE via ftp-exploit</h4>
-            <p>Knowing that ftp is vulnerable to CVE-2015-3306, a good approach is trying to gain RCE via a Webshell, 
-              uploading a php payload.</p>
-            <p>We will review the next exploit: <a href="https://github.com/t0kx/exploit-CVE-2015-3306">https://github.com/t0kx/exploit-CVE-2015-3306</a></p>
-            <p>The exploit connects to the machine via fpt, as an anonymous user. 
-              Next, it uses the fuctions 'site cpfr' y 'site cpto' to copy a php payload to web server's path.
-            </p>
-            <img class="img-fluid img-evidences" src="imgs/008_exploit_py.png" alt="">
-            <p>
-              To replicate this, we try to use those commands to create a php file.
-            </p>
-            <img class="img-fluid img-evidences" src="imgs/009_copyfr_test.png" alt="">
-            <img class="img-fluid img-evidences" src="imgs/010_copytp_test.png" alt="">
-            <p>As it is shown, it is successful. The problem comes when you try to copy a file to '/var/www/html', 
-              because the user doesn't have enough privileges to do so. 
-              This ruins the possibility of gaining an RCE, but still we can move files around within the system, 
-              allowing us to try different approaches</p>
-            
-            <h4>Retrieving sensitive files (shadow and passwd)</h4>
-            <p>SMB server allows us to get all files form anonymous workspace, 
-              and FTP server allows us to copy files to another directories. As we know the location of the anon workspace,
-            could be wise to check if it's posible to copy sensible files to this location, downloading them afterwards. </p>
-            <p>Great targets are:</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">File</th>
-                  <th scope="col">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">'/var/backups/shadow.bak'</th>
-                  <td>Contains password hashes</td>
-                </tr>
-                <tr>
-                  <th scope="row">'/etc/passwd'</th>
-                  <td>Contains users and more info about them.</td>
-                </tr>
-                <tr>
-                  <th scope="row">'/usr/local/etc/etc/proftpd.conf'</th>
-                  <td>FTP server's configuration file.</td>
-                </tr>
-                <tr>
-                  <th scope="row">'/etc/samba/smb.conf'</th>
-                  <td>SMB configuration file</td>
-                </tr>
-              </tbody>
-            </table>
-            <p>Example of '/etc/passwd' file retrieval:</p>
-            <img class="img-fluid img-evidences" src="imgs/011_copying sensitive files.png" alt="">
+        <p>After creating the file, we run 'john', cracking the password of 'aeolus' user.</p>
+        <img class="img-fluid img-evidences" src="imgs/015_john_cracing.png" alt="">
 
-            <p>We download the rest of the files</p>
-            <img class="img-fluid img-evidences" src="imgs/012_get_sensitive_files.png" alt="">
-            <img class="img-fluid img-evidences" src="imgs/013_get_sensitive_files2.png" alt="">
+        <p>We try the new obtained credentials on SSH server, gaining access to the machine.</p>
+        <img class="img-fluid img-evidences" src="imgs/016_ssh_connection.png" alt="">
 
-            <p>Inside of 'passwd', multiple users are found (root, aeolus and cronus)</p>
-            <img class="img-fluid img-evidences" src="imgs/017_users.png" alt="">
+        <h3>Port Forwarding</h3>
+        <p>After gaining access to the system, we need to find a way of escalate our privileges (root or another user).
+          In this case, we tried some techniques as checking crontab files, files executed with
+          sudo privileges and searching files with sensitive information. None of them seemed useful, until we checked
+          machine internal ports.
+        </p>
+        <img class="img-fluid img-evidences" src="imgs/018_internal ports.png" alt="">
+        <p>We also check ports' versions.</p>
+        <img class="img-fluid img-evidences" src="imgs/019_internal_ports_versions.png" alt="">
 
-            <p>Having the users and their password hashes, it's possible to try cracking their passwords. 
-              For that, we can use 'john' (a tool to find weak passwords of users). 
-              It requieres a file that we can build with 'unshadow'</p>
-            <img class="img-fluid img-evidences" src="imgs/014_unshadow.png" alt="">
+        <p>As we know, we don't have access from outside the machine.</p>
+        <img class="img-fluid img-evidences" src="imgs/020_curl_to_internal_http.png" alt="">
 
-            <p>After creating the file, we run 'john', cracking the password of 'aeolus' user.</p>
-            <img class="img-fluid img-evidences" src="imgs/015_john_cracing.png" alt="">
+        <p>One way of earning access is via Port Forwarding. In this case, we can use 'socat' to open 8085 port
+          and redirect all trafic to the HTTP internal server (8080)</p>
+        <p><i>socat TCP-LISTEN:8085,fork,reuseaddr tcp:127.0.0.1:8080</i></p>
+        <img class="img-fluid img-evidences" src="imgs/021_librenms.png" alt="">
 
-            <p>We try the new obtained credentials on SSH server, gaining access to the machine.</p>
-            <img class="img-fluid img-evidences" src="imgs/016_ssh_connection.png" alt="">
+        <h3>Privilege Escalation (I)</h3>
+        <p>The first thing that catches our attention is 'LibreNMS', but what is it?
+          LibreNMS is a network monitoring system, that allows configuration of the network via web interface.</p>
+        <p>We try aeolus credentials, gaining access to the service.</p>
+        <img class="img-fluid img-evidences" src="imgs/022_libreNMS_main_page.png" alt="">
 
-            <h3>Port Forwarding</h3>
-            <p>After gaining access to the system, we need to find a way of escalate our privileges (root or another user).
-              In this case, we tried some techniques as checking crontab files, files executed with 
-              sudo privileges and searching files with sensitive information. None of them seemed useful, until we checked
-              machine internal ports.
-            </p>
-            <img class="img-fluid img-evidences" src="imgs/018_internal ports.png" alt="">
-            <p>We also check ports' versions.</p>
-            <img class="img-fluid img-evidences" src="imgs/019_internal_ports_versions.png" alt="">
+        <h4>SQL-Injection? Meh, not useful</h4>
+        <p>Exploring the web, we found a search-bar. Testing it against SQLi simple payloads, we discover a way of
+          triggering SQL errors.
+        </p>
+        <img class="img-fluid img-evidences" src="imgs/023_sqlinjection.png" alt="">
 
-            <p>As we know, we don't have access from outside the machine.</p>
-            <img class="img-fluid img-evidences" src="imgs/020_curl_to_internal_http.png" alt="">
+        <p>After retrieving the databases, tables, columns and a lot of data, we came into the realization that
+          this path leads to nowhere </p>
 
-            <p>One way of earning access is via Port Forwarding. In this case, we can use 'socat' to open 8085 port
-               and redirect all trafic to the HTTP internal server (8080)</p>
-            <p><i>socat TCP-LISTEN:8085,fork,reuseaddr tcp:127.0.0.1:8080</i></p>
-            <img class="img-fluid img-evidences" src="imgs/021_librenms.png" alt="">
+        <h4>LibreNMS exploit - RCE</h4>
+        <p>Checking for LibreNMS exploits, we encounter 3 different exploits with metaexploit. In this case,
+          we will use 'addhost_cmd_inject', as we have the ability to use the addhosts functionality
+          (Discovered during the enumeration of the web page).</p>
+        <img class="img-fluid img-evidences" src="imgs/024_librenms_exploits.png" alt="">
 
-            <h3>Privilege Escalation (I)</h3>
-            <p>The first thing that catches our attention is 'LibreNMS', but what is it? 
-              LibreNMS is a network monitoring system, that allows configuration of the network via web interface.</p>
-            <p>We try aeolus credentials, gaining access to the service.</p>
-            <img class="img-fluid img-evidences" src="imgs/022_libreNMS_main_page.png" alt="">
-            
-            <h4>SQL-Injection? Meh, not useful</h4>
-            <p>Exploring the web, we found a search-bar. Testing it against SQLi simple payloads, we discover a way of
-              triggering SQL errors.
-            </p>
-            <img class="img-fluid img-evidences" src="imgs/023_sqlinjection.png" alt="">
+        <p>The exploit demands some options to be setted</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">OPTION</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">PASSWORD</th>
+              <td>LibreNMS user's pass</td>
+            </tr>
+            <tr>
+              <th scope="row">RHOST</th>
+              <td>Target's machine IP</td>
+            </tr>
+            <tr>
+              <th scope="row">RPORT</th>
+              <td>Machine's port where LibreNMS allocated</td>
+            </tr>
+            <tr>
+              <th scope="row">USERNAME</th>
+              <td>LibreNMS user</td>
+            </tr>
+            <tr>
+              <th scope="row">LHOST</th>
+              <td>Attacker's machine IP (to stablish a reverse shell)</td>
+            </tr>
+          </tbody>
+        </table>
+        <img class="img-fluid img-evidences" src="imgs/025_exploitoptions.png" alt="">
 
-            <p>After retrieving the databases, tables, columns and a lot of data, we came into the realization that
-              this path leads to nowhere </p>
+        <p>We set the options and exploit the machine.</p>
+        <img class="img-fluid img-evidences" src="imgs/026_librenms_settingparams.png" alt="">
 
-            <h4>LibreNMS exploit - RCE</h4>
-            <p>Checking for LibreNMS exploits, we encounter 3 different exploits with metaexploit. In this case, 
-              we will use 'addhost_cmd_inject', as we have the ability to use the addhosts functionality 
-              (Discovered during the enumeration of the web page).</p>
-            <img class="img-fluid img-evidences" src="imgs/024_librenms_exploits.png" alt="">
+        <p>Reverse shell connection is stablished as 'cronus' user.</p>
+        <img class="img-fluid img-evidences" src="imgs/027_reverseshell.png" alt="">
 
-            <p>The exploit demands some options to be setted</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">OPTION</th>
-                  <th scope="col">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">PASSWORD</th>
-                  <td>LibreNMS user's pass</td>
-                </tr>
-                <tr>
-                  <th scope="row">RHOST</th>
-                  <td>Target's machine IP</td>
-                </tr>
-                <tr>
-                  <th scope="row">RPORT</th>
-                  <td>Machine's port where LibreNMS allocated</td>
-                </tr>
-                <tr>
-                  <th scope="row">USERNAME</th>
-                  <td>LibreNMS user</td>
-                </tr>
-                <tr>
-                  <th scope="row">LHOST</th>
-                  <td>Attacker's machine IP (to stablish a reverse shell)</td>
-                </tr>
-              </tbody>
-            </table>
-            <img class="img-fluid img-evidences" src="imgs/025_exploitoptions.png" alt="">
+        <p>(Optional) To upgrade the terminal to TTY, we decide to run another reverse shell outside of metaexploit,
+          using 'bash -c' to start the reverse shell, and netcat on the kali machine, listening on 1234 port.
+        </p>
+        <img class="img-fluid img-evidences" src="imgs/028_bashreverse.png" alt="">
 
-            <p>We set the options and exploit the machine.</p>
-            <img class="img-fluid img-evidences" src="imgs/026_librenms_settingparams.png" alt="">
+        <p>After dealing with terminal's troubles (thanks to python), we stablish a full TTY terminal.</p>
+        <img class="img-fluid img-evidences" src="imgs/029_pythonsolvingshit.png" alt="">
 
-            <p>Reverse shell connection is stablished as 'cronus' user.</p>
-            <img class="img-fluid img-evidences" src="imgs/027_reverseshell.png" alt="">
+        <h3>Privilege Escalation (II)</h3>
+        <p>First thing to try, is checking binaries allowed to be executed with 'sudo'.
+          In fact, there is 'mysql' available to use.</p>
+        <img class="img-fluid img-evidences" src="imgs/030_sudoprivileges.png" alt="">
 
-            <p>(Optional) To upgrade the terminal to TTY, we decide to run another reverse shell outside of metaexploit, 
-              using 'bash -c' to start the reverse shell, and netcat on the kali machine, listening on 1234 port.
-            </p>
-            <img class="img-fluid img-evidences" src="imgs/028_bashreverse.png" alt="">
+        <p>Checking in GTFobins, we discover that we can escalate privileges via 'mysql'</p>
+        <p><i>https://gtfobins.github.io/gtfobins/mysql/</i></p>
 
-            <p>After dealing with terminal's troubles (thanks to python), we stablish a full TTY terminal.</p>
-            <img class="img-fluid img-evidences" src="imgs/029_pythonsolvingshit.png" alt="">
+        <img class="img-fluid img-evidences" src="imgs/031_gtfobins.png" alt="">
 
-            <h3>Privilege Escalation (II)</h3>
-            <p>First thing to try, is checking binaries allowed to be executed with 'sudo'. 
-              In fact, there is 'mysql' available to use.</p>
-            <img class="img-fluid img-evidences" src="imgs/030_sudoprivileges.png" alt="">
-            
-            <p>Checking in GTFobins, we discover that we can escalate privileges via 'mysql'</p>
-            <p><i>https://gtfobins.github.io/gtfobins/mysql/</i></p>
-            
-            <img class="img-fluid img-evidences" src="imgs/031_gtfobins.png" alt="">
+        <p>WE ARE ROOT!</p>
+        <img class="img-fluid img-evidences" src="imgs/032_rootaccess.png" alt="">
 
-            <p>WE ARE ROOT!</p>
-            <img class="img-fluid img-evidences" src="imgs/032_rootaccess.png" alt="">
-            
-            <p>And now, we can claim our deserved price :D</p>
-            <img class="img-fluid img-evidences" src="imgs/033_proofhehe.png" alt="">
+        <p>And now, we can claim our deserved price :D</p>
+        <img class="img-fluid img-evidences" src="imgs/033_proofhehe.png" alt="">
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-  </body>
+</body>
+
 </html>
