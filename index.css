@@ -1,0 +1,113 @@
+
+#imagen_principal{
+    height: 70vh;
+    background-size: cover;
+    background-image: linear-gradient(to bottom right, #7a48c7, #260e4b);
+}
+
+.mock1{
+    background-color: rebeccapurple;
+}
+
+.mock2{
+    background-color: aqua;
+}
+
+.img-evidences{
+    margin-bottom: 1vh;
+}
+
+
+body{
+    margin: 0;
+    padding: 0;
+ }
+
+h3{
+    margin-top: 1vh;
+}
+p{
+    font-size: 1.2rem;
+}
+
+.light-text{
+    color: aliceblue;
+}
+
+b{
+    color: #7a48c7;
+}
+
+
+#seccion-galeria {
+    position: relative;
+    padding: 30px;
+    background-color: #212529; /* Fondo oscuro */
+    overflow: hidden; /* Para ocultar el desbordamiento */	
+
+}
+#seccion-galeria::after{
+    transform: rotateZ(180deg);
+}
+
+.image-gallery {
+    display: flex; /* Usar flexbox para alinear las imágenes */
+    animation: scroll 40s linear infinite; /* Animación de desplazamiento más lenta */
+    width: fit-content;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0); /* Comienza en la posición original */
+    }
+    100% {
+        transform: translateX(-50%); /* Desplazamiento completo hacia la izquierda */
+    }
+}
+
+.div-img-logo {
+    width: 10vw; 
+    height: 10vw;
+    margin: 0px 2vw; /* Espacio entre imágenes */
+}
+
+.image-gallery .div-img-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit:contain;
+    transition: transform 0.3s; /* Suave efecto al pasar el cursor */
+}
+
+.div-img-logo:hover {
+    transform: scale(1.1); /* Aumenta un poco el tamaño al pasar el cursor */
+}
+
+
+.card{
+    background-color: #FFFFFA;
+    padding-top: 1vh;
+}
+
+.card-text{
+    text-align: justify;
+}
+
+
+.carousel-inner {
+    height: 0;
+    padding-bottom: 35%; /* this sets carousel aspect ratio (4:1 here) */
+  }
+  
+  .carousel-item {
+    position: absolute !important; /* Bootstrap is insistent */
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+.img-carousel{
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
